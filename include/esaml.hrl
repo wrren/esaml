@@ -98,6 +98,7 @@
 	idp_signs_logout_requests = true :: boolean(),
 	sp_sign_metadata = false :: boolean(),
 	verify_recipient = true :: boolean(),
+	verify_audience = true :: boolean(),
 	trusted_fingerprints = [] :: [string() | binary()],
 	metadata_uri = "" :: string(),
 	consume_uri = "" :: string(),

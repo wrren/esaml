@@ -223,7 +223,8 @@ validate_assertion(Xml, DuplicateFun, SP = #esaml_sp{}) ->
             end
         end,
         fun(A) ->
-            case esaml:validate_assertion(A, SP#esaml_sp.consume_uri, SP#esaml_sp.metadata_uri, SP#esaml_sp.verify_recipient) of
+            case esaml:validate_assertion(  A, SP#esaml_sp.consume_uri, SP#esaml_sp.metadata_uri, 
+                                            SP#esaml_sp.verify_recipient, SP#esaml_sp.verify_audience ) of
                     {ok, AR} -> AR;
                     {error, Reason} -> {error, Reason}
             end

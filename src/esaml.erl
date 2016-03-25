@@ -17,7 +17,7 @@
 
 -export([start/2, stop/1, init/1]).
 -export([stale_time/1]).
--export([config/2, config/1, to_xml/1, decode_response/1, decode_assertion/1, validate_assertion/3, validate_assertion/4]).
+-export([config/2, config/1, to_xml/1, decode_response/1, decode_assertion/1, validate_assertion/3, validate_assertion/5]).
 -export([decode_logout_request/1, decode_logout_response/1, decode_idp_metadata/1]).
 
 -type org() :: #esaml_org{}.
@@ -338,13 +338,14 @@ check_stale(A) ->
 -spec validate_assertion(AssertionXml :: #xmlElement{}, Recipient :: string(), Audience :: string()) ->
         {ok, #esaml_assertion{}} | {error, Reason :: term()}.
 validate_assertion(AssertionXml, Recipient, Audience ) ->
-    validate_assertion( AssertionXml, Recipient, Audience, true ).
+    validate_assertion( AssertionXml, Recipient, Audience, true, true ).
 
 %% @doc Parse and validate an assertion, returning it as a record
 %% @private
--spec validate_assertion(AssertionXml :: #xmlElement{}, Recipient :: string(), Audience :: string(), VerifyRecipient :: boolean() ) ->
+-spec validate_assertion(AssertionXml :: #xmlElement{}, Recipient :: string(), Audience :: string(), 
+                            VerifyRecipient :: boolean(), VerifyAudience :: boolean() ) ->
         {ok, #esaml_assertion{}} | {error, Reason :: term()}.
-validate_assertion(AssertionXml, Recipient, Audience,VerifyRecipient) ->
+validate_assertion(AssertionXml, Recipient, Audience,VerifyRecipient, VerifyAudience) ->
     case decode_assertion(AssertionXml) of
         {error, Reason} ->
             {error, Reason};
@@ -361,10 +362,11 @@ validate_assertion(AssertionXml, Recipient, Audience,VerifyRecipient) ->
                 end end,
                 fun(A) -> case A of
                     #esaml_assertion{conditions = Conds} ->
-                        case proplists:get_value(audience, Conds) of
-                            undefined -> A;
-                            Audience -> A;
-                            _ -> {error, bad_audience}
+                        case { VerifyAudience, proplists:get_value(audience, Conds) } of
+                            { _, undefined }    -> A;
+                            { false, _ }        -> A;
+                            { true, Audience }  -> A;
+                            { true, _ }         -> {error, bad_audience}
                         end;
                     _ -> A
                 end end,
