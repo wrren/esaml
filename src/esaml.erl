@@ -17,7 +17,7 @@
 
 -export([start/2, stop/1, init/1]).
 -export([stale_time/1]).
--export([config/2, config/1, to_xml/1, decode_response/1, decode_assertion/1, validate_assertion/3]).
+-export([config/2, config/1, to_xml/1, decode_response/1, decode_assertion/1, validate_assertion/3, validate_assertion/4]).
 -export([decode_logout_request/1, decode_logout_response/1, decode_idp_metadata/1]).
 
 -type org() :: #esaml_org{}.
@@ -337,7 +337,14 @@ check_stale(A) ->
 %% @private
 -spec validate_assertion(AssertionXml :: #xmlElement{}, Recipient :: string(), Audience :: string()) ->
         {ok, #esaml_assertion{}} | {error, Reason :: term()}.
-validate_assertion(AssertionXml, Recipient, Audience) ->
+validate_assertion(AssertionXml, Recipient, Audience ) ->
+    validate_assertion( AssertionXml, Recipient, Audience, true ).
+
+%% @doc Parse and validate an assertion, returning it as a record
+%% @private
+-spec validate_assertion(AssertionXml :: #xmlElement{}, Recipient :: string(), Audience :: string(), VerifyRecipient :: boolean() ) ->
+        {ok, #esaml_assertion{}} | {error, Reason :: term()}.
+validate_assertion(AssertionXml, Recipient, Audience,VerifyRecipient) ->
     case decode_assertion(AssertionXml) of
         {error, Reason} ->
             {error, Reason};
@@ -347,8 +354,9 @@ validate_assertion(AssertionXml, Recipient, Audience) ->
                     #esaml_assertion{version = "2.0"} -> A;
                     _ -> {error, bad_version}
                 end end,
-                fun(A) -> case A of
-                    #esaml_assertion{recipient = Recipient} -> A;
+                fun(A) -> case { VerifyRecipient, A } of
+                    { true, #esaml_assertion{recipient = Recipient} } -> A;
+                    { false, _ } -> A;
                     _ -> {error, bad_recipient}
                 end end,
                 fun(A) -> case A of
