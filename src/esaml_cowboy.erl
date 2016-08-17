@@ -52,7 +52,7 @@ reply_with_logoutresp(SP, IDP, Status, RelayState, Req) ->
 %% @private
 reply_with_req(IDP, SignedXml, RelayState, Req) ->
     Target = esaml_binding:encode_http_redirect(IDP, SignedXml, RelayState),
-    UA = cowboy_req:match_headers( [{ <<"user-agent">>, [], <<"">> }], Req, <<"">> ),
+    UA = cowboy_req:match_headers( [{ 'user-agent', [], <<"">> }], Req, <<"">> ),
     IsIE = not (binary:match(UA, <<"MSIE">>) =:= nomatch),
     if IsIE andalso (byte_size(Target) > 2042) ->
         Html = esaml_binding:encode_http_post(IDP, SignedXml, RelayState),
